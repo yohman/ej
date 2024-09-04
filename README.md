@@ -1,7 +1,7 @@
 # ejie
 Environmental Justice in the Inland Empire
 
-https://yohman.github.io/ejie/web
+https://yohman.github.io/ej/web
 
 ## September 4, 2024 
 
