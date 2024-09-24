@@ -2,149 +2,14 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Add a new layer to a slot</title>
+	<title>EJ in IE</title>
 	<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 	<link href="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.css" rel="stylesheet">
 	<script src="https://api.mapbox.com/mapbox-gl-js/v3.6.0/mapbox-gl.js"></script>
-	<style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-        }
-        #map {
-            width: 50%;
-            height: 100%;
-        }
-        #info-panel {
-            width: 50%;
-            background-color: #f0f0f0;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow: auto;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
 
-		.info-container {
-			display: inline-block;
-		}
-        .info-item {
-            font-size: 1.4em;
-            margin: 10px 0;
-            color: #333;
-        }
-        .info-item.highlight {
-            color: #d9534f; /* Highlight color */
-        }
-        .info-label {
-			color: #333;
-			font-size: 0.4em;
-        }
-		.info-value {
-			font-size: 1.2em;
-			/* font-weight: bold; */
-			background-color: #ccc;
-			padding: 8px;
-			border:2px solid #ccc;
-		}
+	<!-- import css -->
+	<link rel="stylesheet" type="text/css" href="css/style.css">
 
-		.info-value-highlight {
-			background-color: #d9534f;
-			color: white;
-		}
-
-		#slider-container {
-			position: absolute;
-			top: 10px;
-			left: 10px;
-			background: white;
-			padding: 10px;
-			z-index: 1;
-			border-radius: 5px;
-		}
-		#slider, #year-slider {
-			width: 300px;
-		}
-		.big-label {
-			position:absolute;
-			top: 10px;
-			right: 10px;
-			background: white;
-			padding: 10px;
-			z-index: 1;
-			border-radius: 5px;
-			font-size: 8em;
-			opacity: 0.8;
-			font-family: 'Courier New', Courier, monospace;
-		}
-
-		.waffle-chart-container {
-			vertical-align: top;
-			display: inline-block; 
-			margin-right: 20px;
-			text-align: left;
-		}
-
-		.waffle-title {
-			font-size: 0.8em;
-			font-weight: bold;
-			margin-bottom: 5px;
-		}
-
-		.waffle-chart {
-			display: grid;
-			grid-template-columns: repeat(10, 10px);
-			grid-gap: 1px;
-		}
-
-		.waffle-chart div {
-			width: 10px;
-			height: 10px;
-		}
-
-		.waffle-legend {
-			margin-top: 10px;
-		}
-
-		.legend-item {
-			display: flex;
-			align-items: center;
-			margin-bottom: 5px;
-			font-size: 0.6em;
-		}
-
-		.legend-item span {
-			margin-right: 8px;
-		}
-
-		.percentile-bar-container {
-			width: 100%;
-			height: 10px;
-			position: relative;
-		}
-
-		.percentile-bar {
-			width: 100%;
-			height: 5px;
-			background-color: darkgray;
-			position: relative;
-		}
-
-		.indicator {
-			width: 2px;
-			height: 10px;
-			background-color: red;
-			position: absolute;
-			top: -2px;
-		}
-
-		</style>
 </head>
 <body>
 <div id="map"></div>
@@ -154,12 +19,41 @@
     <div class="info-item" id="info-dieselpm"></div>
 </div>
 <div id="slider-container">
+	<div class="info-title">Environmental Justice in the Inland Empire</div>
+
+	<!-- add buttons for each indicator, and assign onclick events to updateLayer() -->
 	<div>
-		<label for="year-slider">Year Built (1980-2025):</label>
-		<input id="year-slider" type="range" min="1980" max="2025" value="1980" step="1">
-		<span id="year-slider-value">1980</span>
+		<button title="DieselPM_P" onclick="updateLayer('DieselPM_P')" class="selected">Diesel PM</button>
+		<button title="OzoneP" onclick="updateLayer('OzoneP')">Ozone</button>
+		<button title="CIscoreP" onclick="updateLayer('CIscoreP')">CIscore</button>
+		<button title="PM2_5_P" onclick="updateLayer('PM2_5_P')">PM2.5</button>
+		<button title="PovertyP" onclick="updateLayer('PovertyP')">Poverty</button>
+		<button title="UnemplP" onclick="updateLayer('UnemplP')">Unemployment</button>
+	</div>
+
+	<div>
+		<!-- add an on/off toggle slider -->
+		<!-- Toggle button to turn warehouses on/off -->
+		<div class="toggle-container">
+			<label class="switch">
+				<input type="checkbox" id="toggle-button">
+				<span class="slider round"></span>
+			</label>
+			<span id="toggle-label">
+				Warehouses
+				<span class="toggle-info" style="display: none;">
+					<label for="year-slider">Year Built (1980-2025):</label>
+					<input id="year-slider" type="range" min="1980" max="2025" value="1980" step="1">
+					<span id="year-slider-value">1980</span>
+				</span>	
+			</span>
+		</div>
+		
 	</div>
 </div>
+
+<div id="legend"></div>
+
 <!-- <div>
 	<span id="year-slider-label" class="big-label">1980</span>
 </div> -->
@@ -181,6 +75,16 @@
 		maxZoom: 16
 	});
 
+	// make toggle switch work. If checked, add warehouses, else remove them
+	const toggleButton = document.getElementById('toggle-button');
+	toggleButton.addEventListener('change', (e) => {
+		if (e.target.checked) {
+			addWarehouses();
+		} else {
+			removeWarehouses();
+		}
+	});
+
 	map.on('style.load', () => {
 
 		// -------------------------------------------------------------------- //
@@ -193,26 +97,35 @@
 			'data': 'data/calenviroscreen.geojson'
 		});
 
-		map.addLayer({
-			'id': 'tracts-choropleth',
-			'type': 'fill',
-			'slot': 'top',
-			'source': 'tracts',
-			'layout': {},
-			'paint': {
-				'fill-color': [
-					'interpolate',
-					['linear'],
-					['get', 'DieselPM_P'],
-					0, '#f7f7f7',
-					20, '#cccccc',
-					40, '#969696',
-					60, '#636363',
-					80, '#252525'
-				],
-				'fill-opacity': 0.8
-			}
-		});
+		// Add the layer to the map
+		addLayer('OzoneP');
+
+		// function to add layer
+		function addLayer(variable='DieselPM_P') {
+			map.addLayer({
+				'id': 'tracts-choropleth',
+				'type': 'fill',
+				'slot': 'top',
+				'source': 'tracts',
+				'layout': {},
+				'paint': {
+					'fill-color': [
+						'interpolate',
+						['linear'],
+						['get', variable],
+						0, '#f7f7f7',
+						20, '#cccccc',
+						40, '#969696',
+						60, '#636363',
+						80, '#252525'
+					],
+					'fill-opacity': 0.8
+				}
+			});
+			addLegend(variable);
+		}
+
+
 
 		// Create the highlight layer (tract outline) that will change on hover
 		map.addLayer({
@@ -269,28 +182,6 @@
 			const AAPI = e.features[0].properties.AAPI;
 			const OtherMult = e.features[0].properties.OtherMult;
 
-			// const html = `
-			// 	<span class="info-label">Tract ID:</span> ${hoveredTract}<br>
-			// 	<span class="info-label">Population:</span> ${population}<br>
-			// 	<span class="info-label">Diesel PM:</span> ${dieselPM}<br>
-			// 	<span class="info-label">OzoneP:</span> ${OzoneP}<br>
-			// 	<span class="info-label">CIscoreP:</span> ${CIscoreP}<br>
-			// 	<span class="info-label">PM2_5_P:</span> ${PM2_5_P}<br>
-			// 	<span class="info-label">PovertyP:</span> ${PovertyP}<br>
-			// 	<span class="info-label">UnemplP:</span> ${UnemplP}<br>
-			// 	<span class="info-label">Child_10:</span> ${Child_10}<br>
-			// 	<span class="info-label">Pop_10_64:</span> ${Pop_10_64}<br>
-			// 	<span class="info-label">Elderly65:</span> ${Elderly65}<br>
-			// 	<span class="info-label">Hispanic:</span> ${Hispanic}<br>
-			// 	<span class="info-label">White:</span> ${White}<br>
-			// 	<span class="info-label">AfricanAm:</span> ${AfricanAm}<br>
-			// 	<span class="info-label">NativeAm:</span> ${NativeAm}<br>
-			// 	<span class="info-label">OtherMult:</span> ${OtherMult}<br>
-			// `;
-
-
-			// add a title with ApproxLoc and County, then add subtitle with 
-			// TotPop19, DieselPM_P, OzoneP, CIscoreP, PM2_5_P, PovertyP, UnemplP
 
 			const html= `
 				<h3>${e.features[0].properties.ApproxLoc}<br><span style="font-size:0.6em">${e.features[0].properties.County} (pop: ${TotPop19})</span></h3>
@@ -360,6 +251,18 @@
 			'type': 'geojson',
 			'data': 'data/warehouse_points.geojson'
 		});
+
+	});
+	
+	function addWarehouses(){
+
+		// turn toggle info on
+		document.querySelector('.toggle-info').style.display = 'inline-block';
+
+		// remove the layer if it already exists
+		if (map.getLayer('warehouses')) {
+			map.removeLayer('warehouses');
+		}
 
 		map.addLayer({
 			'id': 'warehouses',
@@ -433,7 +336,70 @@
 				['<=', ['get', 'year_built'], yearBuilt]
 			]);
 		});
-	});
+	}
+
+	function removeWarehouses(){
+		if (map.getLayer('warehouses')) {
+			map.removeLayer('warehouses');
+		}
+		document.querySelector('.toggle-info').style.display = 'none';
+	}
+
+	// -------------------------------------------------------------------- //
+	// Function to update the layer based on the selected variable
+	// -------------------------------------------------------------------- //
+
+	function updateLayer(variable='DieselPM_P') {
+		map.setPaintProperty('tracts-choropleth', 'fill-color', [
+			'interpolate',
+			['linear'],
+			['get', variable],
+			0, '#f7f7f7',
+			20, '#cccccc',
+			40, '#969696',
+			60, '#636363',
+			80, '#252525'
+		]);
+		addLegend(variable);
+
+		// add a class to the selected button
+		const buttons = document.querySelectorAll('button');
+		buttons.forEach(button => {
+			button.classList.remove('selected');
+			// if button title is equal to the variable, add the selected class
+			if (button.title === variable) {
+				button.classList.add('selected');
+			}
+		});
+	}
+
+
+	// -------------------------------------------------------------------- //
+	// Function to add a layer to the map    							    //
+	// -------------------------------------------------------------------- //
+	function addLegend(variable='DieselPM_P') {
+		const legend = document.getElementById('legend');
+		const colors = ['#f7f7f7', '#cccccc', '#969696', '#636363', '#252525'];
+		const labels = ['0-20', '20-40', '40-60', '60-80', '80+'];
+
+		// add title that includes the variable name
+		legend.innerHTML = `<h3>${variable}</h3>`;
+		
+		colors.forEach((color, index) => {
+			const item = document.createElement('div');
+			const key = document.createElement('span');
+			key.className = 'legend-key';
+			key.style.backgroundColor = color;
+			// add empty char to the key
+			key.innerHTML = '&nbsp;&nbsp;&nbsp;';
+			
+			const value = document.createElement('span');
+			value.innerHTML = labels[index];
+			item.appendChild(key);
+			item.appendChild(value);
+			legend.appendChild(item);
+		});
+	}	
 
 	// -------------------------------------------------------------------- //
 	// Function to generate a waffle chart
