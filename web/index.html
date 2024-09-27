@@ -20,7 +20,8 @@
 </div>
 <div id="slider-container">
 	<div class="info-title">Environmental Justice in the Inland Empire</div>
-
+	<div class="info-subtitle">Select an indicator to view the distribution of environmental justice scores in the Inland Empire</div>
+	<br>
 	<!-- add buttons for each indicator, and assign onclick events to updateLayer() -->
 	<div>
 		<button title="DieselPM_P" onclick="updateLayer('DieselPM_P')" class="selected">Diesel PM</button>
@@ -30,7 +31,7 @@
 		<button title="PovertyP" onclick="updateLayer('PovertyP')">Poverty</button>
 		<button title="UnemplP" onclick="updateLayer('UnemplP')">Unemployment</button>
 	</div>
-
+	<br>
 	<div>
 		<!-- add an on/off toggle slider -->
 		<!-- Toggle button to turn warehouses on/off -->
@@ -98,7 +99,7 @@
 		});
 
 		// Add the layer to the map
-		addLayer('OzoneP');
+		addLayer();
 
 		// function to add layer
 		function addLayer(variable='DieselPM_P') {
@@ -383,10 +384,11 @@
 		const labels = ['0-20', '20-40', '40-60', '60-80', '80+'];
 
 		// add title that includes the variable name
-		legend.innerHTML = `<h3>${variable}</h3>`;
+		legend.innerHTML = `<div class="legend-title">${variable}</div>`;
 		
 		colors.forEach((color, index) => {
 			const item = document.createElement('div');
+			item.className = 'legend-item';
 			const key = document.createElement('span');
 			key.className = 'legend-key';
 			key.style.backgroundColor = color;
